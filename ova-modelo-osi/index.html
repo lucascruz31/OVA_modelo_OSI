@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OVA — Modelo OSI | Universidad de Córdoba</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Colores de las 7 capas OSI (Estándar pedagógico) */
+      --l7:  #e74c3c;
+      --l6:  #e67e22;
+      --l5:  #f1c40f;
+      --l4:  #2ecc71;
+      --l3:  #3498db;
+      --l2:  #9b59b6;
+      --l1:  #1abc9c;
+
+      /* Colores Institucionales Universidad de Córdoba */
+      --unicor-green-deep: #051b10;
+      --unicor-green-dark: #004426;
+      --unicor-green:      #0b6635;
+      --unicor-green-light:#158a49;
+      --unicor-green-vivid:#20b05c;
+      --unicor-gold:       #e5a823;
+      --unicor-gold-light: #f7c75a;
+
+      /* Paleta del entorno */
+      --bg:     #08140d;
+      --bg2:    #0f2317;
+      --bg3:    #163322;
+      --text:   #edf5ef;
+      --muted:  #92a89c;
+      --border: #1e4630;
+      --accent: #20b05c;
+      --accent-gold: #e5a823;
+      --radius: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ===== BOTÓN FLOTANTE BARRA LATERAL ===== */
+    .sidebar-toggle {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 950;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: rgba(11, 35, 23, 0.92);
+      color: #fff;
+      border: 1.5px solid var(--unicor-gold);
+      border-radius: 30px;
+      padding: 0.5rem 1rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+      transition: all 0.25s ease;
+    }
+    .sidebar-toggle:hover {
+      background: var(--unicor-green-light);
+      border-color: var(--unicor-gold-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(32, 176, 92, 0.4);
+    }
+    .sidebar-toggle-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    /* ===== BARRA LATERAL RETRÁCTIL (SIDEBAR) ===== */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 15, 8, 0.75);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .sidebar-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: min(310px, 86vw);
+      background: linear-gradient(180deg, #092014 0%, #06160e 100%);
+      border-right: 2px solid var(--border);
+      box-shadow: 6px 0 35px rgba(0, 0, 0, 0.65);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      padding: 1.25rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 68, 38, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .sidebar-brand img {
+      width: 38px;
+      height: auto;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+    }
+    .sidebar-brand-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      display: block;
+      line-height: 1.2;
+    }
+    .sidebar-brand-sub {
+      font-size: 0.74rem;
+      color: var(--unicor-gold);
+      font-weight: 600;
+      display: block;
+    }
+
+    .sidebar-close {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sidebar-close:hover {
+      background: rgba(231, 76, 60, 0.2);
+      color: #ff6b6b;
+      border-color: #e74c3c;
+    }
+
+    .sidebar-content {
+      padding: 1.2rem 0.9rem;
+      flex: 1;
+    }
+    .sidebar-section-title {
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--unicor-gold);
+      margin-bottom: 0.7rem;
+      padding-left: 0.6rem;
+      display: block;
+    }
+
+    .sidebar-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.65rem 0.9rem;
+      border-radius: 8px;
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+    .sidebar-link:hover {
+      background: var(--bg3);
+      color: #fff;
+      border-left-color: var(--unicor-green-vivid);
+      transform: translateX(4px);
+    }
+    .sidebar-link.active {
+      background: rgba(11, 102, 53, 0.35);
+      color: #fff;
+      border-left-color: var(--unicor-gold);
+      font-weight: 700;
+      box-shadow: inset 0 0 12px rgba(229, 168, 35, 0.08);
+    }
+    .sidebar-link .nav-icon {
+      font-size: 1.15rem;
+      width: 1.4rem;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid var(--border);
+      background: rgba(5, 27, 16, 0.4);
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .sidebar-footer strong {
+      color: var(--unicor-gold);
+      display: block;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: linear-gradient(135deg, #04160d 0%, #004426 50%, #072a18 100%);
+      border-bottom: 3px solid var(--unicor-gold);
+      padding: 3rem 1.5rem 2.4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% -10%, rgba(229, 168, 35, 0.18), transparent);
+      pointer-events: none;
+    }
+
+    .header-container {
+      max-width: 950px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .header-brand-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
+    }
+    @media (min-width: 768px) {
+      .header-brand-wrap {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        text-align: left;
+        gap: 2rem;
+      }
+    }
+
+    .header-logo {
+      width: 96px;
+      height: auto;
+      max-height: 130px;
+      filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.5));
+      transition: transform 0.3s ease;
+    }
+    .header-logo:hover {
+      transform: scale(1.04);
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: rgba(229, 168, 35, 0.15);
+      border: 1px solid var(--unicor-gold);
+      color: var(--unicor-gold-light);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 0.4rem;
+    }
+    .header-faculty {
+      font-size: 0.88rem;
+      color: #cfe6d6;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #fff;
+      line-height: 1.15;
+    }
+    header h1 span {
+      color: var(--unicor-gold);
+      text-shadow: 0 0 25px rgba(229, 168, 35, 0.45);
+    }
+    .header-subtitle {
+      color: var(--unicor-green-vivid);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-top: 0.4rem;
+    }
+    .header-desc {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 0.35rem;
+      max-width: 650px;
+    }
+
+    /* ===== MAIN ===== */
+    main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+    section { margin-bottom: 4rem; scroll-margin-top: 50px; }
+    section > h2 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.5rem;
+      color: var(--unicor-green-vivid);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    section > h2::after {
+      content: '';
+      display: inline-block;
+      width: 45px;
+      height: 3px;
+      background: var(--unicor-gold);
+      border-radius: 2px;
+      margin-left: 0.6rem;
+    }
+
+    /* ===== CARDS ===== */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    @media (max-width:700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover {
+      border-color: var(--unicor-green-light);
+    }
+    .card h3 {
+      font-size: 1.05rem;
+      margin-bottom: 0.7rem;
+      color: var(--unicor-gold);
+      font-weight: 700;
+    }
+    .card ul { padding-left: 1.2rem; }
+    .card ul li { margin-bottom: 0.4rem; font-size: 0.92rem; }
+
+    /* ===== BOTONES ===== */
+    .btn-p {
+      padding: 0.45rem 1.15rem;
+      border: none;
+      border-radius: 20px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: var(--unicor-green-vivid);
+      color: #04190c;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 12px rgba(32, 176, 92, 0.3);
+    }
+    .btn-p:hover {
+      background: #25d36f;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(32, 176, 92, 0.5);
+    }
+    .btn-s {
+      padding: 0.45rem 1.15rem;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: var(--bg3);
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+    .btn-s:hover {
+      background: var(--unicor-green-dark);
+      border-color: var(--unicor-gold);
+      color: #fff;
+    }
+
+    /* ===== OSI STACK ===== */
+    .osi-stack { display: flex; flex-direction: column; gap: 6px; margin: 1.5rem 0; }
+    .layer-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+    }
+    .layer-bar:hover {
+      transform: translateX(8px);
+      filter: brightness(1.25);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+    }
+    .layer-bar .num { font-size: 1.4rem; font-weight: 900; width: 2rem; text-align: center; }
+    .layer-bar .info { flex: 1; }
+    .layer-bar .name { font-weight: 700; font-size: 1rem; }
+    .layer-bar .pdu { font-size: 0.78rem; opacity: 0.75; margin-top: 0.1rem; }
+
+    /* ===== TABS ===== */
+    .tablist {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 2px solid var(--border);
+      flex-wrap: nowrap;
+    }
+    .tablist::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex-shrink: 0;
+      padding: 0.6rem 1rem;
+      border: none;
+      background: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      border-radius: 8px 8px 0 0;
+      transition: color 0.15s, background 0.15s;
+      position: relative;
+    }
+    .tab-btn:hover { background: var(--bg3); }
+    .tab-btn[aria-selected="true"]::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 -2px;
+      border-block-end: 3px solid currentColor;
+    }
+    .tab-panel { display: none; padding: 1.5rem 0; animation: fadeIn 0.2s ease; }
+    .tab-panel.visible { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+
+    /* ===== LAYER CONTENT ===== */
+    .layer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    @media (max-width:700px) { .layer-grid { grid-template-columns:1fr; } }
+    .layer-grid .full { grid-column: 1 / -1; }
+
+    .detail-card {
+      background: var(--bg3);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      border-left: 4px solid;
+    }
+    .detail-card h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .detail-card ul { padding-left: 1.2rem; font-size: 0.88rem; }
+    .detail-card ul li { margin-bottom: 0.35rem; }
+    .detail-card p { font-size: 0.88rem; }
+
+    .example-box {
+      background: #0b2216;
+      border: 1px solid #1c4b31;
+      border-radius: var(--radius);
+      padding: 1.3rem;
+    }
+    .step { display: flex; gap: 0.65rem; margin-bottom: 0.65rem; align-items: flex-start; font-size: 0.88rem; }
+    .step-num {
+      background: var(--unicor-gold);
+      color: #04190c;
+      border-radius: 50%;
+      width: 1.35rem;
+      height: 1.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.72rem;
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+    }
+    .proto-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+    .ptag {
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid;
+    }
+
+    /* ===== FLOW ===== */
+    .flow-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.2rem;
+    }
+    .flow-wrap h3 { color: var(--unicor-gold); font-size: 1.1rem; margin-bottom: 1rem; }
+    .flow-diagram { display: flex; align-items: flex-start; gap: 0.8rem; overflow-x: auto; padding-bottom: 0.6rem; }
+    .flow-col { display: flex; flex-direction: column; gap: 3px; min-width: 120px; }
+    .flow-col h4 { font-size: 0.8rem; color: var(--muted); text-align: center; margin-bottom: 0.35rem; white-space: nowrap; }
+    .flow-cell {
+      padding: 0.4rem 0.55rem;
+      border-radius: 5px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-align: center;
+      transition: opacity 0.3s, transform 0.3s;
+      white-space: nowrap;
+    }
+    .flow-cell.highlight { transform: scale(1.06); box-shadow: 0 0 0 2px #fff5; }
+    .flow-cell.dim { opacity: 0.25; }
+    .flow-arrow { font-size: 1.35rem; color: var(--unicor-gold); display: flex; align-items: center; padding-top: 1.8rem; flex-shrink: 0; }
+
+    .flow-controls { margin-top: 1.1rem; display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap; }
+    .flow-status { flex: 1; font-size: 0.86rem; color: var(--muted); min-width: 180px; }
+
+    /* ============================================================ */
+    /* ===== MINIJUEGO EDUCATIVO: DESAFÍO OSI ===================== */
+    /* ============================================================ */
+    .game-container {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 1.5rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .game-header {
+      background: var(--bg3);
+      border-bottom: 2px solid var(--border);
+      padding: 0.8rem 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .game-modes-tabs {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .game-tab-btn {
+      background: rgba(5, 27, 16, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 20px;
+      padding: 0.45rem 1rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+    .game-tab-btn:hover {
+      background: var(--unicor-green-dark);
+      border-color: var(--unicor-gold);
+    }
+    .game-tab-btn.active {
+      background: var(--unicor-green);
+      color: #fff;
+      border-color: var(--unicor-gold);
+      box-shadow: 0 0 12px rgba(229, 168, 35, 0.35);
+    }
+
+    .game-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .game-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.1;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .stat-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .stat-val {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #fff;
+    }
+    .stat-val.highlight {
+      color: var(--unicor-gold);
+    }
+
+    .game-sound-btn {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 50%;
+      width: 2.2rem;
+      height: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .game-sound-btn:hover {
+      border-color: var(--unicor-gold);
+      transform: scale(1.08);
+    }
+
+    .game-body {
+      padding: 1.6rem 1.4rem;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Tarjetas y componentes comunes de los modos de juego */
+    .game-panel {
+      max-width: 820px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .game-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 15px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .game-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.4rem;
+    }
+
+    .game-subtitle {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .game-card {
+      background: var(--bg3);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      margin-bottom: 1.4rem;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Visualizador dinámico del paquete ensamblado (Modo 1) */
+    .packet-visualizer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 1.2rem 0;
+      padding: 1rem;
+      background: #06150c;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-height: 52px;
+      align-items: center;
+    }
+
+    .packet-header-tag {
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* Grilla de opciones interactivas */
+    .game-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .game-option-btn {
+      background: #11281a;
+      border: 2px solid var(--border);
+      color: var(--text);
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: all 0.15s ease;
+    }
+    .game-option-btn:hover {
+      border-color: var(--unicor-gold);
+      background: #193a26;
+      transform: translateY(-2px);
+    }
+    .game-option-btn.correct {
+      border-color: #2ecc71 !important;
+      background: rgba(46, 204, 113, 0.2) !important;
+      color: #fff;
+    }
+    .game-option-btn.incorrect {
+      border-color: #e74c3c !important;
+      background: rgba(231, 76, 60, 0.2) !important;
+    }
+
+    /* Feedback del juego */
+    .game-feedback {
+      margin-top: 1.2rem;
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+    .game-feedback.show { display: block; }
+    .game-feedback.ok {
+      background: rgba(46, 204, 113, 0.15);
+      border: 1.5px solid #2ecc71;
+      color: #eafff2;
+    }
+    .game-feedback.fail {
+      background: rgba(231, 76, 60, 0.15);
+      border: 1.5px solid #e74c3c;
+      color: #ffebeb;
+    }
+
+    /* Modo 3: Caza-Protocolos (Arcade) */
+    .arcade-timer-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin-bottom: 1.4rem;
+      overflow: hidden;
+    }
+    .arcade-timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e74c3c, #f1c40f, #2ecc71);
+      transition: width 0.1s linear;
+    }
+
+    .arcade-prompt-card {
+      text-align: center;
+      padding: 2.2rem 1.5rem;
+      background: #092014;
+      border: 2px solid var(--unicor-gold);
+      border-radius: 14px;
+      margin-bottom: 1.4rem;
+      box-shadow: 0 0 25px rgba(229, 168, 35, 0.2);
+    }
+    .arcade-item-name {
+      font-size: 2.1rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.5px;
+    }
+    .arcade-item-category {
+      font-size: 0.85rem;
+      color: var(--unicor-gold);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .arcade-layers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.6rem;
+    }
+    .arcade-layer-btn {
+      padding: 0.85rem 0.6rem;
+      border-radius: 8px;
+      border: 2px solid;
+      background: rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.86rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all 0.15s ease;
+      color: #fff;
+    }
+    .arcade-layer-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      filter: brightness(1.3);
+    }
+
+    /* ===== QUIZ ===== */
+    .quiz-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+    }
+    .quiz-q { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: #fff; }
+    .quiz-q .qn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      background: var(--unicor-gold);
+      color: #04190c;
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-right: 0.5rem;
+    }
+    .quiz-opts { display: flex; flex-direction: column; gap: 0.55rem; }
+    .quiz-opt {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: all 0.15s;
+      background: var(--bg3);
+    }
+    .quiz-opt:hover {
+      border-color: var(--unicor-gold);
+      background: #1b3d29;
+    }
+    .quiz-opt.correct { border-color: #2ecc71; background: rgba(46,204,113,.15); }
+    .quiz-opt.incorrect { border-color: #e74c3c; background: rgba(231,76,60,.15); }
+    .quiz-fb { margin-top: 0.9rem; padding: 0.75rem 1.1rem; border-radius: 8px; font-size: 0.9rem; display: none; }
+    .quiz-fb.show { display: block; }
+    .quiz-fb.ok { background: rgba(46,204,113,.15); border: 1.5px solid #2ecc71; }
+    .quiz-fb.fail { background: rgba(231,76,60,.15); border: 1.5px solid #e74c3c; }
+    .quiz-nav { display: flex; gap: 0.7rem; margin-top: 1rem; align-items: center; }
+    .quiz-prog { font-size: 0.84rem; color: var(--muted); flex: 1; }
+
+    .prog-bar-wrap { background: var(--bg3); border-radius: 20px; height: 6px; margin-bottom: 1rem; overflow: hidden; }
+    .prog-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--unicor-green-vivid), var(--unicor-gold)); transition: width 0.3s; }
+
+    /* ===== HELPERS ===== */
+    p { margin-bottom: 0.7rem; }
+    p:last-child { margin-bottom: 0; }
+    .hl { color: var(--unicor-gold); font-weight: 700; }
+    .muted { color: var(--muted); }
+    code {
+      background: #04140a;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      color: #58d68d;
+      font-size: 0.88em;
+      border: 1px solid #143820;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      border-top: 2px solid var(--unicor-green-dark);
+      background: #041009;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.6;
+    }
+    footer strong { color: var(--unicor-gold); }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- BOTÓN FLOTANTE: BARRA LATERAL RETRÁCTIL -->
+<button id="sidebarToggle" class="sidebar-toggle" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="sidebarNav">
+  <span class="sidebar-toggle-icon">☰</span>
+  <span class="sidebar-toggle-label">Menú OVA</span>
+</button>
+
+<!-- TELÓN DE FONDO (BACKDROP) -->
+<div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+<!-- BARRA LATERAL RETRÁCTIL -->
+<aside id="sidebarNav" class="sidebar" aria-label="Navegación del OVA">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <img src="assets/unicor.svg" alt="Escudo Universidad de Córdoba">
+      <div>
+        <span class="sidebar-brand-title">Unicórdoba</span>
+        <span class="sidebar-brand-sub">Modelo OSI · Redes</span>
+      </div>
+    </div>
+    <button id="sidebarClose" class="sidebar-close" aria-label="Cerrar menú">✕</button>
+  </div>
+  <div class="sidebar-content">
+    <span class="sidebar-section-title">Contenidos del OVA</span>
+    <ul class="sidebar-links">
+      <li>
+        <a href="#intro" class="sidebar-link active">
+          <span class="nav-icon">🔍</span>
+          <span>¿Qué es OSI?</span>
+        </a>
+      </li>
+      <li>
+        <a href="#stack" class="sidebar-link">
+          <span class="nav-icon">🗂️</span>
+          <span>Las 7 Capas</span>
+        </a>
+      </li>
+      <li>
+        <a href="#layers" class="sidebar-link">
+          <span class="nav-icon">📚</span>
+          <span>Capas en Detalle</span>
+        </a>
+      </li>
+      <li>
+        <a href="#flujo" class="sidebar-link">
+          <span class="nav-icon">🔄</span>
+          <span>Flujo de Datos</span>
+        </a>
+      </li>
+      <li>
+        <a href="#minigame" class="sidebar-link">
+          <span class="nav-icon">🎮</span>
+          <span>Minijuego Educativo</span>
+        </a>
+      </li>
+      <li>
+        <a href="#quiz" class="sidebar-link">
+          <span class="nav-icon">✍️</span>
+          <span>Autoevaluación</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="sidebar-footer">
+    <strong>Universidad de Córdoba</strong>
+    <p>Facultad de Educación y Ciencias Humanas<br>Licenciatura en Informática</p>
+  </div>
+</aside>
+
+<!-- ENCABEZADO INSTITUCIONAL CON LOGO -->
+<header>
+  <div class="header-container">
+    <div class="header-brand-wrap">
+      <img src="assets/unicor.svg" alt="Escudo oficial de la Universidad de Córdoba" class="header-logo" width="96" height="133">
+      <div class="header-text-block">
+        <div class="header-badge">Universidad de Córdoba · Colombia</div>
+        <div class="header-faculty">Facultad de Educación y Ciencias Humanas · Licenciatura en Informática</div>
+        <h1>Modelo <span>OSI</span></h1>
+        <p class="header-subtitle">Objeto Virtual de Aprendizaje (OVA) · Redes de Computadores</p>
+        <p class="header-desc">Aprende a detalle las 7 capas con fundamentos técnicos, ejemplos prácticos paso a paso y un minijuego interactivo de red</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ 1. INTRO ============ -->
+  <section id="intro">
+    <h2>🔍 ¿Qué es el Modelo OSI?</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>📖 Definición</h3>
+        <p>El <strong>Modelo OSI</strong> (Open Systems Interconnection) es un marco conceptual creado por la <strong>ISO en 1984</strong> que describe cómo los sistemas de computadoras deben comunicarse a través de una red.</p>
+        <p>Divide el proceso de comunicación en <strong>7 capas independientes</strong>, cada una con responsabilidades específicas y bien definidas.</p>
+      </div>
+      <div class="card">
+        <h3>🎯 ¿Para qué sirve?</h3>
+        <ul>
+          <li>Estandarizar la comunicación entre sistemas diferentes</li>
+          <li>Facilitar el diagnóstico y solución de problemas de red</li>
+          <li>Permitir la interoperabilidad entre fabricantes distintos</li>
+          <li>Separar responsabilidades para facilitar el desarrollo</li>
+          <li>Servir como referencia universal en telecomunicaciones</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🧩 Capas vs. Protocolos</h3>
+        <p>El modelo OSI es un <strong>marco de referencia</strong>, no un protocolo. Los protocolos reales (TCP/IP, HTTP, Ethernet…) se <em>mapean</em> a sus capas.</p>
+        <p>Por ejemplo, <code>TCP/IP</code> (el protocolo real de Internet) fusiona varias capas OSI en su propio modelo de 4 capas.</p>
+      </div>
+      <div class="card">
+        <h3>🔑 Principio clave: comunicación entre pares</h3>
+        <p>Cada capa solo habla con la <strong>capa inmediatamente superior</strong> e <strong>inferior</strong>. Dos dispositivos se comunican de forma que cada capa del emisor habla "virtualmente" con la misma capa del receptor.</p>
+        <p>Esto se llama <span class="hl">comunicación de par a par (peer-to-peer)</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. STACK ============ -->
+  <section id="stack">
+    <h2>🗂️ Las 7 Capas del Modelo OSI</h2>
+    <p class="muted" style="margin-bottom:1rem;">Haz clic en una capa para ir a su explicación detallada.</p>
+    <div class="osi-stack" id="osiStack"></div>
+    <div class="card" style="margin-top:1rem;">
+      <h3>💡 Mnemotecnia para recordar las capas</h3>
+      <p><strong>De capa 7 → 1 (inglés):</strong> <span class="hl">"All People Seem To Need Data Processing"</span></p>
+      <p><strong>De capa 1 → 7 (inglés):</strong> <span class="hl">"Please Do Not Throw Sausage Pizza Away"</span></p>
+    </div>
+  </section>
+
+  <!-- ============ 3. CAPAS EN DETALLE ============ -->
+  <section id="layers">
+    <h2>📚 Capas en Detalle</h2>
+    <div class="tablist" role="tablist" id="layerTablist" aria-label="Capas OSI"></div>
+    <div id="layerPanels"></div>
+  </section>
+
+  <!-- ============ 4. FLUJO DE DATOS ============ -->
+  <section id="flujo">
+    <h2>🔄 Flujo de Datos: Encapsulación y Desencapsulación</h2>
+    <div class="card">
+      <p>Cuando un mensaje viaja entre dos dispositivos, <strong>pasa por las 7 capas dos veces</strong>: en el emisor <em>desciende</em> (encapsulación — se añaden cabeceras) y en el receptor <em>asciende</em> (desencapsulación — se quitan cabeceras).</p>
+    </div>
+    <div class="flow-wrap">
+      <h3>Animación: Envío de un correo electrónico</h3>
+      <div class="flow-diagram" id="flowDiagram"></div>
+      <div class="flow-controls">
+        <button class="btn-p" id="flowPlay">▶ Iniciar</button>
+        <button class="btn-s" id="flowReset">↺ Reiniciar</button>
+        <div class="flow-status" id="flowStatus">Presiona Iniciar para ver cómo viajan los datos.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. MINIJUEGO EDUCATIVO ============ -->
+  <section id="minigame">
+    <h2>🎮 Minijuego Educativo: Desafío OSI</h2>
+    <p>Pon en práctica tus conocimientos en redes con tres modos de juego interactivos: construye el viaje de un paquete capa por capa, resuelve casos reales de diagnóstico como detective de soporte o demuestra tu rapidez en el reto contrarreloj.</p>
+
+    <div class="game-container" id="gameContainer">
+      <!-- Barra superior del minijuego -->
+      <div class="game-header">
+        <div class="game-modes-tabs" role="tablist" aria-label="Modos de juego">
+          <button class="game-tab-btn active" id="btnMode1" onclick="selectGameMode('encapsulation')">
+            <span>📦</span> El Viaje del Paquete
+          </button>
+          <button class="game-tab-btn" id="btnMode2" onclick="selectGameMode('detective')">
+            <span>🕵️‍♂️</span> Detective OSI
+          </button>
+          <button class="game-tab-btn" id="btnMode3" onclick="selectGameMode('speed')">
+            <span>⚡</span> Caza-Protocolos
+          </button>
+        </div>
+        <div class="game-stats">
+          <div class="game-stat-item">
+            <span class="stat-label">Puntaje</span>
+            <span class="stat-val" id="gameScore">0</span>
+          </div>
+          <div class="game-stat-item">
+            <span class="stat-label">Racha</span>
+            <span class="stat-val highlight" id="gameStreak">0x</span>
+          </div>
+          <button class="game-sound-btn" id="gameSoundBtn" onclick="toggleGameSound()" title="Activar/Desactivar efectos sonoros">
+            🔊
+          </button>
+        </div>
+      </div>
+
+      <!-- Contenedor dinámico del modo activo -->
+      <div class="game-body" id="gameBody">
+        <!-- Renderizado dinámico vía JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. QUIZ ============ -->
+  <section id="quiz">
+    <h2>✍️ Autoevaluación</h2>
+    <div class="quiz-box" id="quizContainer"></div>
+  </section>
+
+</main>
+
+<footer>
+  <p><strong>Universidad de Córdoba</strong> · Licenciatura en Informática</p>
+  <p>Redes de Computadores · Objeto Virtual de Aprendizaje basado en el estándar ISO/IEC 7498-1</p>
+</footer>
+
+<script>
+// ============================================================
+// DATOS OSI
+// ============================================================
+const LAYERS = [
+  {
+    num:7, name:'Aplicación', en:'Application', color:'#e74c3c', icon:'💻',
+    pdu:'Mensaje / Datos',
+    desc:'La capa de Aplicación es el punto de contacto directo con el usuario. Proporciona los servicios de red que las aplicaciones del usuario final necesitan para comunicarse. No es la aplicación misma, sino la interfaz que permite a las apps usar la red.',
+    func:'Ofrece servicios de red a las aplicaciones de usuario: navegadores, clientes de correo, clientes FTP, etc. Define protocolos que establecen cómo se estructuran y transmiten los datos de alto nivel.',
+    protocols:['HTTP','HTTPS','FTP','SMTP','POP3','IMAP','DNS','DHCP','Telnet','SSH','SNMP'],
+    devices:['Servidor Web','Servidor de Correo','Navegador (lógica de red)','Servidor DNS'],
+    example:{
+      title:'Ejemplo: Acceder a un sitio web',
+      steps:[
+        'El usuario escribe <code>https://unicordoba.edu.co</code> en su navegador.',
+        'El navegador construye una solicitud <code>HTTP GET / HTTP/1.1</code> con cabeceras: <code>Host</code>, <code>User-Agent</code>, <code>Accept</code>.',
+        'Esta solicitud es el mensaje que empezará a bajar por las capas OSI.',
+        'La capa 7 no sabe cómo se transmitirá el mensaje, solo cómo formatearlo según el protocolo HTTP.'
+      ]
+    },
+    extra:'Los datos en esta capa se llaman simplemente "datos" o "mensajes". DNS, que traduce nombres de dominio (unicordoba.edu.co) a IPs, opera completamente en esta capa.'
+  },
+  {
+    num:6, name:'Presentación', en:'Presentation', color:'#e67e22', icon:'🖼️',
+    pdu:'Datos (formateados)',
+    desc:'La capa de Presentación es el "traductor" de la red. Garantiza que los datos enviados por la capa de Aplicación puedan ser entendidos por la capa de Aplicación del receptor, independientemente de las diferencias en representación interna de datos.',
+    func:'Tres funciones principales: (1) Traducción de formatos de datos (ej: EBCDIC a ASCII), (2) Cifrado y descifrado de datos, (3) Compresión y descompresión.',
+    protocols:['SSL/TLS','JPEG','PNG','GIF','MPEG','MP3','ASCII','Unicode','UTF-8','XDR'],
+    devices:['Gateways de cifrado SSL/TLS'],
+    example:{
+      title:'Ejemplo: Cifrado con TLS (HTTPS)',
+      steps:[
+        'El mensaje HTTP "GET /portal.html" llega de la capa 7.',
+        'TLS <strong>cifra</strong> el mensaje: lo transforma en datos ilegibles sin la clave correcta.',
+        'Si el servidor usa JPEG o PNG, esta capa también maneja la <strong>compresión</strong> de imágenes.',
+        'Al llegar al destino, TLS <strong>descifra</strong> el contenido para que la capa 7 lo entienda.'
+      ]
+    },
+    extra:'En la práctica TCP/IP, esta capa está fusionada con la de Aplicación. Por eso TLS opera "sobre" TCP aunque conceptualmente sea capa 6.'
+  },
+  {
+    num:5, name:'Sesión', en:'Session', color:'#f1c40f', icon:'🤝',
+    pdu:'Datos (con sesión)',
+    desc:'La capa de Sesión administra el diálogo entre dos dispositivos. Es responsable de establecer, mantener, sincronizar y terminar sesiones de comunicación entre aplicaciones en diferentes máquinas.',
+    func:'Controla el inicio, mantenimiento y cierre de sesiones (diálogos). Gestiona puntos de control (checkpoints) para reanudar transmisiones interrumpidas.',
+    protocols:['NetBIOS','RPC','PPTP','NFS','SQL (protocolo de sesión)','SIP (sesión)'],
+    devices:['Gateways de aplicación'],
+    example:{
+      title:'Ejemplo: Sesión en videollamada académica',
+      steps:[
+        'Al unirse a una clase virtual, esta capa <strong>establece la sesión</strong> entre el host y el servidor.',
+        'Durante la sesión, <strong>mantiene la conexión</strong> y sincroniza flujos de audio y video.',
+        'Si hay microcortes, intenta <strong>reanudar la sesión</strong> sin reiniciarla desde cero.',
+        'Al salir de la sala, <strong>cierra la sesión</strong> y libera los sockets y recursos.'
+      ]
+    },
+    extra:'Los "checkpoints" son un concepto clave: si se interrumpe la carga de un archivo grande, se retoma desde el último punto de verificación en lugar del inicio.'
+  },
+  {
+    num:4, name:'Transporte', en:'Transport', color:'#2ecc71', icon:'🚛',
+    pdu:'Segmento (TCP) / Datagrama (UDP)',
+    desc:'La capa de Transporte garantiza la entrega de datos de extremo a extremo entre aplicaciones. Divide los mensajes en segmentos, controla el flujo, corrige errores y multiplexa múltiples conversaciones mediante números de puerto.',
+    func:'Segmentación y reensamblaje, control de flujo (ventana deslizante), control de errores (ACKs) y direccionamiento por puertos.',
+    protocols:['TCP','UDP','SCTP','DCCP','SPX'],
+    devices:['Firewalls de capa 4','Load Balancers (balanceadores de carga)'],
+    example:{
+      title:'Ejemplo: TCP vs UDP',
+      steps:[
+        '<strong>TCP</strong> (confiable): En una descarga, divide en segmentos numerados. El receptor confirma cada uno con <code>ACK</code>. Si falta uno, se retransmite.',
+        '<strong>UDP</strong> (rápido): En streaming en vivo o juegos, envía datagramas sin esperar confirmación. Máxima velocidad sin retransmisión.',
+        'Los <strong>puertos</strong> multiplexan servicios: HTTP→puerto <code>80</code>, HTTPS→<code>443</code>, SSH→<code>22</code>, DNS→<code>53</code>.',
+        'El saludo de tres vías (three-way handshake) TCP: <code>SYN</code> → <code>SYN-ACK</code> → <code>ACK</code>.'
+      ]
+    },
+    extra:'Los puertos del 0 al 1023 son "puertos bien conocidos" (well-known ports) asignados por la IANA a servicios estándar de red.'
+  },
+  {
+    num:3, name:'Red', en:'Network', color:'#3498db', icon:'🌐',
+    pdu:'Paquete',
+    desc:'La capa de Red es responsable del enrutamiento lógico: determina el mejor camino para que los paquetes viajen desde el origen hasta el destino a través de múltiples redes interconectadas, usando direcciones lógicas (IP).',
+    func:'Enrutamiento lógico (determinar la mejor ruta), direccionamiento IP, fragmentación y reensamblaje de paquetes según MTU.',
+    protocols:['IPv4','IPv6','ICMP','OSPF','BGP','RIP','EIGRP','IS-IS'],
+    devices:['Router','Router de borde (BGP)','Firewall de capa 3'],
+    example:{
+      title:'Ejemplo: Enrutamiento de un paquete',
+      steps:[
+        'Una PC del campus (<code>192.168.10.25</code>) envía un paquete a un servidor web externo.',
+        'El router gateway revisa su <strong>tabla de enrutamiento</strong> dinámica.',
+        'El router decide el siguiente salto (hop) hacia el proveedor de servicios (ISP).',
+        'Cada router elige el <strong>camino óptimo</strong> según métricas de coste, latencia y saltos.'
+      ]
+    },
+    extra:'El comando <code>ping</code> utiliza el protocolo ICMP de esta capa para medir el tiempo de respuesta y verificar la conectividad IP.'
+  },
+  {
+    num:2, name:'Enlace de Datos', en:'Data Link', color:'#9b59b6', icon:'🔌',
+    pdu:'Trama (Frame)',
+    desc:'La capa de Enlace de Datos garantiza la transferencia de datos libre de errores entre dos nodos directamente conectados en el mismo medio. Usa direcciones físicas (MAC) y se divide en subcapas LLC y MAC.',
+    func:'Control de acceso al medio (MAC), detección y corrección de errores en la trama, direccionamiento físico por MACs.',
+    protocols:['Ethernet (IEEE 802.3)','Wi-Fi (IEEE 802.11)','PPP','HDLC','ARP','STP','VLAN (802.1Q)'],
+    devices:['Switch de capa 2','Bridge (puente)','Tarjeta de red (NIC)','Access Point'],
+    example:{
+      title:'Ejemplo: Conmutación por Switch y dirección MAC',
+      steps:[
+        'El paquete IP se encapsula en una <strong>trama Ethernet</strong> con la MAC física del equipo y del switch.',
+        'Estructura de la trama: <code>|Dest MAC|Src MAC|EtherType|Datos IP|CRC|</code>.',
+        'El Switch lee la MAC de destino en su <strong>tabla CAM</strong> y envía la trama solo al puerto del destinatario.',
+        'El receptor calcula el <strong>CRC</strong>; si hay errores en los bits, descarta la trama.'
+      ]
+    },
+    extra:'ARP (Address Resolution Protocol) permite asociar una dirección IP conocida con la dirección física MAC del dispositivo en la red local.'
+  },
+  {
+    num:1, name:'Física', en:'Physical', color:'#1abc9c', icon:'📡',
+    pdu:'Bit',
+    desc:'La capa Física es la base del modelo. Se encarga de la transmisión de la secuencia de bits (ceros y unos) a través del medio físico tangible (cobre, fibra o aire), definiendo voltajes, frecuencias y conectores.',
+    func:'Transmisión de bits en el medio físico. Define niveles de voltaje, pulsos ópticos, modulación de radio, conectores (RJ45), topología física y velocidad de transmisión.',
+    protocols:['Ethernet 10/100/1000BASE-T','Wi-Fi PHY','Bluetooth PHY','DSL','SONET/SDH','USB','Fibra óptica'],
+    devices:['Hub (concentrador)','Repetidor','Cable UTP Cat 6','Fibra óptica','Antena Wi-Fi','Transceiver SFP'],
+    example:{
+      title:'Ejemplo: Transmisión física de señales',
+      steps:[
+        'La trama de la capa 2 se transforma en una cadena pura de <strong>bits: 01010011...</strong>',
+        '<strong>Cable UTP</strong>: Cada bit se convierte en un pulso eléctrico diferencial de voltaje.',
+        '<strong>Fibra óptica</strong>: Los bits son destellos de luz láser de altísima velocidad.',
+        '<strong>Wi-Fi</strong>: Los bits se modulan en ondas electromagnéticas a 2.4 GHz o 5 GHz.'
+      ]
+    },
+    extra:'En esta capa operan los hubs o repetidores, dispositivos que no interpretan direcciones y simplemente replican la señal eléctrica recibida a todos sus puertos.'
+  }
+];
+
+// ============================================================
+// RENDER STACK
+// ============================================================
+function renderStack() {
+  const el = document.getElementById('osiStack');
+  LAYERS.forEach((l, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'layer-bar';
+    bar.style.cssText = `background:${l.color}18; border-left:5px solid ${l.color};`;
+    bar.innerHTML = `
+      <span class="num" style="color:${l.color}">${l.num}</span>
+      <div class="info">
+        <div class="name" style="color:${l.color}">${l.icon} Capa ${l.num}: ${l.name} <span style="font-size:.78rem;opacity:.7;">(${l.en})</span></div>
+        <div class="pdu" style="color:${l.color}bb">PDU: ${l.pdu}</div>
+      </div>
+      <span style="color:${l.color};opacity:.6;font-size:1.15rem;">›</span>`;
+    bar.addEventListener('click', () => {
+      document.getElementById('layers').scrollIntoView({ behavior:'smooth' });
+      setTimeout(() => selectTab(LAYERS.length - 1 - i), 400);
+    });
+    el.appendChild(bar);
+  });
+}
+
+// ============================================================
+// RENDER LAYER TABS
+// ============================================================
+function renderLayerTabs() {
+  const tablist = document.getElementById('layerTablist');
+  const panels  = document.getElementById('layerPanels');
+  LAYERS.slice().reverse().forEach((l, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tab-btn';
+    btn.id = `tab-${l.num}`;
+    btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+    btn.setAttribute('role', 'tab');
+    btn.style.color = l.color;
+    btn.innerHTML = `${l.icon} ${l.num}. ${l.name}`;
+    btn.addEventListener('click', () => selectTab(i));
+    tablist.appendChild(btn);
+
+    const panel = document.createElement('div');
+    panel.id = `panel-${l.num}`;
+    panel.className = 'tab-panel' + (i === 0 ? ' visible' : '');
+    panel.setAttribute('role', 'tabpanel');
+    panel.innerHTML = buildLayerHTML(l);
+    panels.appendChild(panel);
+  });
+}
+
+function selectTab(idx) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const sel = i === idx;
+    b.setAttribute('aria-selected', sel ? 'true' : 'false');
+    if (sel) b.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
+  });
+  document.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('visible', i === idx));
+}
+
+function buildLayerHTML(l) {
+  const protoHTML = l.protocols.map(p =>
+    `<span class="ptag" style="color:${l.color};border-color:${l.color}55;background:${l.color}15">${p}</span>`
+  ).join('');
+  const devHTML = l.devices.map(d => `<li>${d}</li>`).join('');
+  const stepsHTML = l.example.steps.map((s, i) =>
+    `<div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>`
+  ).join('');
+  return `
+    <div style="border-left:4px solid ${l.color};padding-left:1.1rem;margin-bottom:1.3rem;">
+      <h3 style="color:${l.color};font-size:1.3rem;">${l.icon} Capa ${l.num}: ${l.name} <small style="color:var(--muted);font-size:.72em;">(${l.en})</small></h3>
+      <p style="margin-top:.45rem;">${l.desc}</p>
+    </div>
+    <div class="layer-grid">
+      <div class="detail-card" style="border-color:${l.color}66;"><h4 style="color:${l.color}">⚙️ Función Principal</h4><p>${l.func}</p></div>
+      <div class="detail-card" style="border-color:${l.color}66;"><h4 style="color:${l.color}">🖥️ Dispositivos clave</h4><ul>${devHTML}</ul></div>
+      <div class="detail-card full" style="border-color:${l.color}66;"><h4 style="color:${l.color}">🌐 Protocolos representativos</h4><div class="proto-tags">${protoHTML}</div></div>
+      <div class="full"><div class="example-box"><strong style="color:${l.color};display:block;margin-bottom:.7rem;">📌 ${l.example.title}</strong>${stepsHTML}</div></div>
+      <div class="detail-card full" style="border-color:${l.color}33;background:${l.color}0a;"><h4 style="color:${l.color}">💡 Dato técnico adicional</h4><p>${l.extra}</p></div>
+    </div>`;
+}
+
+// ============================================================
+// FLUJO DE DATOS ANIMADO
+// ============================================================
+const FLOW_DESC = [
+  'Capa 7 (Aplicación): La app genera el mensaje — "MAIL FROM: estudiante@unicordoba.edu.co".',
+  'Capa 6 (Presentación): Se codifica en UTF-8 y se cifra con el protocolo TLS.',
+  'Capa 5 (Sesión): Se establece y etiqueta la sesión de diálogo SMTP.',
+  'Capa 4 (Transporte): Se divide en segmentos TCP añadiendo puerto destino 25/587.',
+  'Capa 3 (Red): Se añade cabecera IP con IP origen y destino.',
+  'Capa 2 (Enlace): Se encapsula en trama Ethernet con direcciones MAC físicas.',
+  'Capa 1 (Física): La trama se convierte en señales eléctricas/ópticas de bits.',
+  '⚡ BITS transmitiéndose a través del medio físico.',
+  'Destino Capa 1: Bits recibidos por la interfaz física → reconstrucción de trama.',
+  'Destino Capa 2: Trama Ethernet verificada (CRC correcto) → extracción de paquete IP.',
+  'Destino Capa 3: Paquete IP leído y confirmado → extracción de segmento TCP.',
+  'Destino Capa 4: Segmentos reensamblados en orden, confirmación ACK enviada.',
+  'Destino Capa 5: Sesión SMTP identificada y sincronizada.',
+  'Destino Capa 6: Datos descifrados con TLS y convertidos a texto legible.',
+  'Destino Capa 7: El servidor de correo de destino recibe el mensaje íntegro. ✅'
+];
+
+let flowStep = -1, flowIv = null;
+
+function renderFlowDiagram() {
+  const c = document.getElementById('flowDiagram');
+  const colA = mkCol('📤 Emisor (Encapsula)'); const colM = mkCol('📡 Medio Físico'); const colB = mkCol('📥 Receptor (Desencapsula)');
+  const rl = [...LAYERS].reverse();
+  rl.forEach((l, i) => {
+    colA.cells.appendChild(mkCell(l, `fa-${i}`, `${l.num}. ${l.name}`));
+    colB.cells.appendChild(mkCell(l, `fb-${i}`, `${l.num}. ${l.name}`));
+  });
+  const mCell = mkCell(LAYERS[6], 'fm-0', '⚡ Bits');
+  colM.cells.style.justifyContent = 'flex-end';
+  colM.cells.appendChild(mCell);
+  c.appendChild(colA.el);
+  c.appendChild(mkArr());
+  c.appendChild(colM.el);
+  c.appendChild(mkArr());
+  c.appendChild(colB.el);
+}
+
+function mkArr() { const d=document.createElement('div'); d.className='flow-arrow'; d.textContent='→'; return d; }
+function mkCol(t) {
+  const el=document.createElement('div'); el.className='flow-col';
+  const h=document.createElement('h4'); h.textContent=t; el.appendChild(h);
+  const cells=document.createElement('div'); cells.style.cssText='display:flex;flex-direction:column;gap:4px;'; el.appendChild(cells);
+  return {el,cells};
+}
+function mkCell(l, id, lbl) {
+  const c=document.createElement('div'); c.className='flow-cell'; c.id=id;
+  c.style.cssText=`background:${l.color}25;color:${l.color};border:1px solid ${l.color}45;`;
+  c.textContent=lbl; return c;
+}
+
+function animateFlow() {
+  flowStep++;
+  if (flowStep >= 15) {
+    clearInterval(flowIv); flowIv=null;
+    document.getElementById('flowPlay').textContent='▶ Iniciar';
+    document.getElementById('flowStatus').textContent='✅ Transmisión completada. ¡Los datos llegaron con éxito!';
+    return;
+  }
+  document.getElementById('flowStatus').textContent = `Paso ${flowStep+1}/15: ${FLOW_DESC[flowStep]}`;
+  const allA = [...document.querySelectorAll('[id^="fa-"]')];
+  const allB = [...document.querySelectorAll('[id^="fb-"]')];
+  const mid  = document.getElementById('fm-0');
+  [...allA,...allB,mid].forEach(x => { x.classList.remove('highlight'); x.classList.add('dim'); });
+  if (flowStep < 7) {
+    const c = document.getElementById(`fa-${6-flowStep}`);
+    if(c){c.classList.remove('dim');c.classList.add('highlight');}
+  } else if (flowStep === 7) {
+    mid.classList.remove('dim'); mid.classList.add('highlight');
+  } else {
+    const c = document.getElementById(`fb-${flowStep-8}`);
+    if(c){c.classList.remove('dim');c.classList.add('highlight');}
+  }
+}
+
+function resetFlow() {
+  clearInterval(flowIv); flowIv=null; flowStep=-1;
+  document.getElementById('flowPlay').textContent='▶ Iniciar';
+  document.getElementById('flowStatus').textContent='Presiona Iniciar para ver cómo viajan los datos.';
+  document.querySelectorAll('.flow-cell').forEach(c=>{c.classList.remove('highlight','dim');});
+}
+
+// ============================================================
+// MOTOR DE AUDIO (Web Audio API sintetizado)
+// ============================================================
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+}
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'correct') {
+      // Tono ascendente de éxito
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.18); // G5
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'incorrect') {
+      // Tono descendente de error
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.26);
+    } else if (type === 'fanfare') {
+      // Fanfarria breve de victoria
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.value = freq;
+        const startTime = now + idx * 0.1;
+        g.gain.setValueAtTime(0.2, startTime);
+        g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.22);
+        o.start(startTime);
+        o.stop(startTime + 0.25);
+      });
+    }
+  } catch (e) {
+    // Silently continue if audio context is blocked
+  }
+}
+
+function toggleGameSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('gameSoundBtn');
+  btn.textContent = soundEnabled ? '🔊' : '🔇';
+  btn.title = soundEnabled ? 'Efectos sonoros activados' : 'Efectos sonoros silenciados';
+}
+
+// ============================================================
+// MINIJUEGO EDUCATIVO: DESAFÍO OSI
+// ============================================================
+let currentMode = 'encapsulation';
+let gameScore = 0;
+let gameStreak = 0;
+
+function updateGameStats(deltaScore, resetStreak = false) {
+  if (resetStreak) {
+    gameStreak = 0;
+  } else {
+    gameStreak++;
+    const bonus = Math.min(gameStreak, 5);
+    gameScore += (deltaScore * (1 + (bonus - 1) * 0.2));
+  }
+  document.getElementById('gameScore').textContent = Math.round(gameScore);
+  document.getElementById('gameStreak').textContent = gameStreak + 'x';
+}
+
+function selectGameMode(mode) {
+  currentMode = mode;
+  ['btnMode1', 'btnMode2', 'btnMode3'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (mode === 'encapsulation') document.getElementById('btnMode1').classList.add('active');
+  if (mode === 'detective') document.getElementById('btnMode2').classList.add('active');
+  if (mode === 'speed') document.getElementById('btnMode3').classList.add('active');
+
+  const body = document.getElementById('gameBody');
+  if (mode === 'encapsulation') renderEncapsulationMode(body);
+  else if (mode === 'detective') renderDetectiveMode(body);
+  else if (mode === 'speed') renderSpeedMode(body);
+}
+
+// ------------------------------------------------------------
+// MODO 1: EL VIAJE DEL PAQUETE (ENCAPSULACIÓN)
+// ------------------------------------------------------------
+const ENCAP_MISSIONS = [
+  {
+    title: 'Misión 1: Solicitud Web Segura al Portal Unicórdoba (HTTPS)',
+    scenario: 'El estudiante ingresa a "https://unicordoba.edu.co". Construye el paquete paso a paso mientras desciende por la pila OSI del emisor.',
+    steps: [
+      {
+        layer: 7, name: 'Aplicación', color: '#e74c3c',
+        q: '¿Qué protocolo de capa de aplicación genera la solicitud del recurso web?',
+        options: ['HTTP / HTTPS', 'DNS', 'BGP', 'ICMP'],
+        correct: 0,
+        tag: 'GET /index.html (HTTPS)',
+        explain: 'La Capa 7 formula la petición HTTP GET /index.html que representa los datos puros que el usuario desea solicitar.'
+      },
+      {
+        layer: 6, name: 'Presentación', color: '#e67e22',
+        q: 'Para proteger las credenciales del estudiante, ¿qué protocolo cifra los datos en esta capa?',
+        options: ['SSH', 'TLS / SSL', 'ASCII', 'TCP'],
+        correct: 1,
+        tag: 'Cifrado TLS v1.3',
+        explain: 'En la Capa 6, TLS realiza el cifrado criptográfico garantizando confidencialidad e integridad del mensaje.'
+      },
+      {
+        layer: 5, name: 'Sesión', color: '#f1c40f',
+        q: '¿Cuál es la función principal de la Capa de Sesión en esta transmisión?',
+        options: ['Asignar la IP del router', 'Abrir, mantener y sincronizar el diálogo del socket', 'Corregir bits en el cable', 'Dividir el archivo en fragmentos MTU'],
+        correct: 1,
+        tag: 'Sesión ID #8492 Activa',
+        explain: 'La Capa 5 administra los puertos de diálogo lógicos (sockets) para que el intercambio no se cruce con otras aplicaciones.'
+      },
+      {
+        layer: 4, name: 'Transporte', color: '#2ecc71',
+        q: '¿Qué encabezados y unidad de datos (PDU) se generan para asegurar la entrega confiable del mensaje?',
+        options: ['PDU: Paquete con IP destino', 'PDU: Segmento TCP con Puerto Destino 443', 'PDU: Trama con dirección MAC', 'PDU: Datagrama UDP puerto 53'],
+        correct: 1,
+        tag: 'Segmento TCP [Puerto: 443]',
+        explain: 'En la Capa 4 se segmenta la información y se agrega el encabezado TCP (puerto 443 para HTTPS, números de secuencia y control de flujo).'
+      },
+      {
+        layer: 3, name: 'Red', color: '#3498db',
+        q: 'Para que los routers puedan encaminar la petición a través de Internet, ¿qué se añade en esta capa?',
+        options: ['Direcciones MAC de la tarjeta de red', 'Direcciones IP (Origen y Destino) en un Paquete', 'Frecuencias de radio Wi-Fi', 'Números de puerto efímeros'],
+        correct: 1,
+        tag: 'Paquete IP [192.168.1.10 → 186.28.x.x]',
+        explain: 'La Capa 3 añade la dirección IP lógica de origen y la IP destino del servidor web de Unicórdoba en un Paquete.'
+      },
+      {
+        layer: 2, name: 'Enlace de Datos', color: '#9b59b6',
+        q: 'El paquete se prepara para cruzar el switch local hacia el router gateway. ¿Qué estructura se construye?',
+        options: ['Trama Ethernet con MAC destino del Gateway y código CRC', 'Señales eléctricas analógicas', 'Datagrama UDP con checksum', 'Túnel VPN'],
+        correct: 0,
+        tag: 'Trama Ethernet [MAC Gateway + CRC]',
+        explain: 'La Capa 2 crea la Trama (Frame), añadiendo la dirección MAC física del siguiente salto (el router de borde) y el código de redundancia cíclica (CRC).'
+      },
+      {
+        layer: 1, name: 'Física', color: '#1abc9c',
+        q: 'Finalmente, ¿cómo viaja la trama a través del cable UTP hacia el puerto del switch?',
+        options: ['Como archivos binarios en memoria RAM', 'Como señales eléctricas diferenciales codificadas en bits (0s y 1s)', 'Como paquetes enrutados por BGP', 'Como consultas ARP'],
+        correct: 1,
+        tag: '⚡ 01001000 01010100 01010100 01010000 01010011...',
+        explain: 'La Capa 1 traduce la trama en pulsos de voltaje eléctrico sobre los pares de cobre del cable UTP Cat 6.'
+      }
+    ]
+  }
+];
+
+let encapMissionIdx = 0;
+let encapStepIdx = 0;
+let encapBuiltTags = [];
+
+function renderEncapsulationMode(container) {
+  const mission = ENCAP_MISSIONS[encapMissionIdx];
+  const step = mission.steps[encapStepIdx];
+
+  // Si se completaron todos los pasos
+  if (encapStepIdx >= mission.steps.length) {
+    playSound('fanfare');
+    container.innerHTML = `
+      <div class="game-panel" style="text-align:center;padding:1.5rem 0;">
+        <div style="font-size:3.8rem;margin-bottom:.5rem;">🎉</div>
+        <div class="game-title" style="color:var(--unicor-gold);font-size:1.8rem;">¡Paquete Encapsulado y Transmitido con Éxito!</div>
+        <p class="game-subtitle">Has guiado el mensaje a través de las 7 capas del Modelo OSI sin pérdida de integridad.</p>
+        <div class="packet-visualizer" style="justify-content:center;margin:1.5rem auto;max-width:700px;">
+          ${encapBuiltTags.map(t => `<span class="packet-header-tag" style="background:${t.color}33;border:1px solid ${t.color};color:${t.color};">${t.text}</span>`).join('')}
+        </div>
+        <p style="color:#d5e8dc;font-size:.95rem;margin-bottom:1.5rem;">
+          ¡Excelente trabajo! El paquete ha llegado al medio físico listo para ser transmitido y desencapsulado en el receptor.
+        </p>
+        <button class="btn-p" onclick="resetEncapsulationGame()" style="padding:.6rem 1.8rem;font-size:1rem;">
+          🔄 Jugar de nuevo esta misión
+        </button>
+      </div>`;
+    return;
+  }
+
+  const tagsHTML = encapBuiltTags.length === 0
+    ? '<span style="color:var(--muted);font-size:.82rem;font-style:italic;">El paquete aún no contiene cabeceras añadidas. Responde para encapsularlo...</span>'
+    : encapBuiltTags.map(t => `<span class="packet-header-tag" style="background:${t.color}33;border:1.5px solid ${t.color};color:${t.color};">${t.text}</span>`).join(' <span style="color:var(--unicor-gold);">+</span> ');
+
+  container.innerHTML = `
+    <div class="game-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem;">
+        <span class="game-badge" style="background:${step.color}25;border:1px solid ${step.color};color:${step.color};">
+          Etapa ${encapStepIdx + 1} de 7 · Capa ${step.layer}: ${step.name}
+        </span>
+        <span style="font-size:.82rem;color:var(--muted);font-weight:700;">
+          Dirección: <strong>Descendente (Encapsulación Emisor)</strong> ⬇️
+        </span>
+      </div>
+
+      <div class="game-title">${mission.title}</div>
+      <p class="game-subtitle">${mission.scenario}</p>
+
+      <!-- Visualizador del paquete en construcción -->
+      <div style="font-size:.82rem;color:var(--unicor-gold);font-weight:700;margin-bottom:.3rem;">
+        📦 Estado actual del paquete en la pila OSI:
+      </div>
+      <div class="packet-visualizer">
+        ${tagsHTML}
+      </div>
+
+      <!-- Pregunta de la etapa actual -->
+      <div class="game-card">
+        <div style="font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.9rem;">
+          ${step.q}
+        </div>
+        <div class="game-options-grid" id="encapOptions">
+          ${step.options.map((opt, i) => `
+            <button class="game-option-btn" onclick="answerEncapStep(${i})">
+              <span style="color:var(--unicor-gold);font-weight:800;">${String.fromCharCode(65 + i)}.</span>
+              <span>${opt}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="game-feedback" id="encapFeedback"></div>
+      </div>
+    </div>`;
+}
+
+function answerEncapStep(choiceIdx) {
+  const mission = ENCAP_MISSIONS[encapMissionIdx];
+  const step = mission.steps[encapStepIdx];
+  const btns = document.querySelectorAll('#encapOptions .game-option-btn');
+  const fb = document.getElementById('encapFeedback');
+
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === step.correct) b.classList.add('correct');
+    else if (i === choiceIdx) b.classList.add('incorrect');
+  });
+
+  const isOk = choiceIdx === step.correct;
+  if (isOk) {
+    playSound('correct');
+    updateGameStats(150);
+    encapBuiltTags.push({ text: step.tag, color: step.color });
+    fb.className = 'game-feedback show ok';
+    fb.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;">
+        <div><strong>✅ ¡Correcto! (+150 pts)</strong> ${step.explain}</div>
+        <button class="btn-p" onclick="advanceEncapStep()" style="padding:.4rem 1.2rem;">Continuar al siguiente paso →</button>
+      </div>`;
+  } else {
+    playSound('incorrect');
+    updateGameStats(0, true);
+    fb.className = 'game-feedback show fail';
+    fb.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;">
+        <div><strong>❌ Incorrecto.</strong> ${step.explain}</div>
+        <button class="btn-s" onclick="advanceEncapStep()" style="padding:.4rem 1.2rem;">Continuar de todas formas →</button>
+      </div>`;
+  }
+}
+
+function advanceEncapStep() {
+  encapStepIdx++;
+  renderEncapsulationMode(document.getElementById('gameBody'));
+}
+
+function resetEncapsulationGame() {
+  encapStepIdx = 0;
+  encapBuiltTags = [];
+  renderEncapsulationMode(document.getElementById('gameBody'));
+}
+
+// ------------------------------------------------------------
+// MODO 2: DETECTIVE DE FALLAS DE RED (DIAGNÓSTICO OSI)
+// ------------------------------------------------------------
+const DETECTIVE_CASES = [
+  {
+    id: 1,
+    title: 'Caso #1: Pérdida total de enlace en la sala de sistemas',
+    symptom: 'Un computador no puede navegar ni renovar IP. La luz LED física "LINK" del puerto del switch en el rack se encuentra totalmente apagada. Al inspeccionar la canaleta, el cable UTP tiene una rotura en los filamentos de cobre.',
+    options: [
+      { layer: 1, label: 'Capa 1 — Física', correct: true },
+      { layer: 2, label: 'Capa 2 — Enlace de Datos', correct: false },
+      { layer: 3, label: 'Capa 3 — Red', correct: false },
+      { layer: 4, label: 'Capa 4 — Transporte', correct: false }
+    ],
+    action: 'Reemplazar el cable UTP dañado por un cable Cat 6 certificado y verificar la continuidad eléctrica con un tester de red.',
+    reason: 'Al tratarse de daño tangible en el medio de transmisión y ausencia de portadora eléctrica en los pines RJ-45, la falla reside en la Capa 1 (Física).'
+  },
+  {
+    id: 2,
+    title: 'Caso #2: Descarte masivo de tramas en switch de laboratorio',
+    symptom: 'El switch gestionable registra en su consola que el 40% de las tramas se descartan por fallo en el campo CRC (Cyclic Redundancy Check) debido a una discordancia de semidúplex forzado en la tarjeta de red.',
+    options: [
+      { layer: 1, label: 'Capa 1 — Física', correct: false },
+      { layer: 2, label: 'Capa 2 — Enlace de Datos', correct: true },
+      { layer: 3, label: 'Capa 3 — Red', correct: false },
+      { layer: 7, label: 'Capa 7 — Aplicación', correct: false }
+    ],
+    action: 'Configurar ambos extremos del enlace en auto-negociación Full-Duplex y validar que la trama Ethernet conserve el CRC íntegro.',
+    reason: 'La detección y control de errores por trama (FCS/CRC) y la negociación de control de acceso al medio MAC ocurren estrictamente en la Capa 2 (Enlace de Datos).'
+  },
+  {
+    id: 3,
+    title: 'Caso #3: Conflicto de direcciones y pérdida de salto al Gateway',
+    symptom: 'Dos servidores del departamento fueron configurados estáticamente con la misma dirección 192.168.10.50/24. Los paquetes con destino al gateway predeterminado se pierden y las tablas de rutas no pueden enrutar.',
+    options: [
+      { layer: 2, label: 'Capa 2 — Enlace de Datos', correct: false },
+      { layer: 3, label: 'Capa 3 — Red', correct: true },
+      { layer: 4, label: 'Capa 4 — Transporte', correct: false },
+      { layer: 5, label: 'Capa 5 — Sesión', correct: false }
+    ],
+    action: 'Asignar una dirección IP estática única dentro de la subred a cada host o activar reservas DHCP en el router.',
+    reason: 'El direccionamiento lógico IP y el enrutamiento interredes corresponden a la Capa 3 (Red).'
+  },
+  {
+    id: 4,
+    title: 'Caso #4: Ping responde pero el puerto web está inaccesible',
+    symptom: 'El administrador de red comprueba que el servidor responde perfectamente al comando "ping" (ICMP), pero al intentar abrir la aplicación web en el puerto TCP 443 la conexión es rechazada inmediatamente con "Connection Refused".',
+    options: [
+      { layer: 1, label: 'Capa 1 — Física', correct: false },
+      { layer: 3, label: 'Capa 3 — Red', correct: false },
+      { layer: 4, label: 'Capa 4 — Transporte', correct: true },
+      { layer: 6, label: 'Capa 6 — Presentación', correct: false }
+    ],
+    action: 'Revisar la configuración del firewall para abrir el puerto TCP 443 y comprobar que el servicio web esté escuchando en dicho socket.',
+    reason: 'Si ICMP (Capa 3) funciona, el camino de red está bien. La falla está en el filtrado o rechazo a nivel de puerto de transporte TCP (Capa 4).'
+  },
+  {
+    id: 5,
+    title: 'Caso #5: Videoconferencia congelada y falta de sincronización',
+    symptom: 'Durante una clase magistral remota, hay microcortes intermitentes. La aplicación no logra reanudar el diálogo de audio y video ni recuperar el punto de control (checkpoint) acordado entre los dos equipos.',
+    options: [
+      { layer: 2, label: 'Capa 2 — Enlace de Datos', correct: false },
+      { layer: 4, label: 'Capa 4 — Transporte', correct: false },
+      { layer: 5, label: 'Capa 5 — Sesión', correct: true },
+      { layer: 7, label: 'Capa 7 — Aplicación', correct: false }
+    ],
+    action: 'Reestablecer los protocolos de diálogo y puntos de sincronización de sesión (RPC/SIP) para permitir la reanudación fluida de la transmisión.',
+    reason: 'El establecimiento, mantenimiento, sincronización y cierre ordenado de sesiones de diálogo entre aplicaciones es la función principal de la Capa 5 (Sesión).'
+  },
+  {
+    id: 6,
+    title: 'Caso #6: Error de compatibilidad criptográfica SSL/TLS',
+    symptom: 'Al ingresar a un portal interno antiguo, el navegador moderno bloquea el acceso mostrando: "ERR_SSL_VERSION_OR_CIPHER_MISMATCH". El servidor utiliza un algoritmo de cifrado obsoleto que el cliente rechaza interpretar.',
+    options: [
+      { layer: 3, label: 'Capa 3 — Red', correct: false },
+      { layer: 4, label: 'Capa 4 — Transporte', correct: false },
+      { layer: 6, label: 'Capa 6 — Presentación', correct: true },
+      { layer: 7, label: 'Capa 7 — Aplicación', correct: false }
+    ],
+    action: 'Actualizar la suite criptográfica (Cipher Suite) del servidor a TLS 1.3 y regenerar certificados con codificación estándar segura.',
+    reason: 'El cifrado, descifrado y formateo de la representación de los datos es la competencia directa de la Capa 6 (Presentación).'
+  }
+];
+
+let detectiveIdx = 0;
+
+function renderDetectiveMode(container) {
+  if (detectiveIdx >= DETECTIVE_CASES.length) {
+    playSound('fanfare');
+    container.innerHTML = `
+      <div class="game-panel" style="text-align:center;padding:1.5rem 0;">
+        <div style="font-size:3.8rem;margin-bottom:.5rem;">🎖️</div>
+        <div class="game-title" style="color:var(--unicor-gold);font-size:1.8rem;">¡Caso Cerrado: Eres un Detective Experto de Red!</div>
+        <p class="game-subtitle">Has resuelto todos los casos de soporte técnico aplicando el método deductivo del Modelo OSI.</p>
+        <p style="color:#d5e8dc;font-size:.95rem;max-width:600px;margin:1.2rem auto;">
+          Dominas el enfoque de resolución de problemas de redes (Bottom-Up y Top-Down), una de las competencias más valoradas en la administración de infraestructura de TI.
+        </p>
+        <button class="btn-p" onclick="detectiveIdx = 0; renderDetectiveMode(document.getElementById('gameBody'))" style="padding:.6rem 1.8rem;">
+          🔄 Resolver los casos nuevamente
+        </button>
+      </div>`;
+    return;
+  }
+
+  const c = DETECTIVE_CASES[detectiveIdx];
+  container.innerHTML = `
+    <div class="game-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem;">
+        <span class="game-badge" style="background:rgba(229,168,35,.2);border:1px solid var(--unicor-gold);color:var(--unicor-gold-light);">
+          Caso ${detectiveIdx + 1} de ${DETECTIVE_CASES.length} · Soporte Técnico TI
+        </span>
+        <span style="font-size:.82rem;color:var(--muted);font-weight:700;">
+          Diagnóstico: <strong>Aislamiento de Capa OSI</strong>
+        </span>
+      </div>
+
+      <div class="game-title">${c.title}</div>
+      <p class="game-subtitle">Lee el ticket de incidente y determina en qué capa OSI se origina el fallo.</p>
+
+      <div class="game-card">
+        <div style="font-size:.82rem;color:var(--unicor-gold);font-weight:800;text-transform:uppercase;margin-bottom:.4rem;">
+          📋 Descripción del incidente reportado:
+        </div>
+        <p style="font-size:1rem;color:#fff;line-height:1.6;margin-bottom:1.3rem;">
+          "${c.symptom}"
+        </p>
+
+        <div style="font-size:.88rem;color:#d5e8dc;font-weight:700;margin-bottom:.7rem;">
+          ¿En qué capa del Modelo OSI debe intervenir el administrador de red?
+        </div>
+        <div class="game-options-grid" id="detectiveOptions">
+          ${c.options.map((opt, i) => `
+            <button class="game-option-btn" onclick="answerDetective(${i})">
+              <span style="color:var(--unicor-gold);font-weight:800;">${i+1}.</span>
+              <span>${opt.label}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="game-feedback" id="detectiveFeedback"></div>
+      </div>
+    </div>`;
+}
+
+function answerDetective(idx) {
+  const c = DETECTIVE_CASES[detectiveIdx];
+  const choice = c.options[idx];
+  const btns = document.querySelectorAll('#detectiveOptions .game-option-btn');
+  const fb = document.getElementById('detectiveFeedback');
+
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (c.options[i].correct) b.classList.add('correct');
+    else if (i === idx) b.classList.add('incorrect');
+  });
+
+  if (choice.correct) {
+    playSound('correct');
+    updateGameStats(200);
+    fb.className = 'game-feedback show ok';
+    fb.innerHTML = `
+      <div>
+        <strong>✅ ¡Diagnóstico Acertado! (+200 pts)</strong>
+        <p style="margin:.4rem 0;">${c.reason}</p>
+        <p style="color:var(--unicor-gold);font-size:.86rem;margin-top:.3rem;">
+          🛠️ <strong>Acción recomendada:</strong> ${c.action}
+        </p>
+        <button class="btn-p" onclick="detectiveIdx++; renderDetectiveMode(document.getElementById('gameBody'))" style="margin-top:.8rem;padding:.4rem 1.2rem;">
+          Siguiente caso →
+        </button>
+      </div>`;
+  } else {
+    playSound('incorrect');
+    updateGameStats(0, true);
+    fb.className = 'game-feedback show fail';
+    fb.innerHTML = `
+      <div>
+        <strong>❌ Diagnóstico Incorrecto.</strong>
+        <p style="margin:.4rem 0;">${c.reason}</p>
+        <p style="color:var(--unicor-gold);font-size:.86rem;margin-top:.3rem;">
+          🛠️ <strong>Acción recomendada:</strong> ${c.action}
+        </p>
+        <button class="btn-s" onclick="detectiveIdx++; renderDetectiveMode(document.getElementById('gameBody'))" style="margin-top:.8rem;padding:.4rem 1.2rem;">
+          Continuar →
+        </button>
+      </div>`;
+  }
+}
+
+// ------------------------------------------------------------
+// MODO 3: CAZA-PROTOCOLOS (CONTRARRELOJ 30s)
+// ------------------------------------------------------------
+const ARCADE_POOL = [
+  { name: 'Router', category: 'Dispositivo', layer: 3 },
+  { name: 'Switch de Capa 2', category: 'Dispositivo', layer: 2 },
+  { name: 'Hub / Repetidor', category: 'Dispositivo', layer: 1 },
+  { name: 'Cable de Fibra Óptica', category: 'Medio Físico', layer: 1 },
+  { name: 'DNS', category: 'Protocolo', layer: 7 },
+  { name: 'HTTP / HTTPS', category: 'Protocolo', layer: 7 },
+  { name: 'FTP', category: 'Protocolo', layer: 7 },
+  { name: 'SSH', category: 'Protocolo', layer: 7 },
+  { name: 'TLS / SSL', category: 'Protocolo', layer: 6 },
+  { name: 'Formato JPEG / PNG', category: 'Codificación', layer: 6 },
+  { name: 'RPC / NetBIOS', category: 'Protocolo', layer: 5 },
+  { name: 'TCP', category: 'Protocolo', layer: 4 },
+  { name: 'UDP', category: 'Protocolo', layer: 4 },
+  { name: 'IPv4 / IPv6', category: 'Protocolo', layer: 3 },
+  { name: 'ICMP (Ping)', category: 'Protocolo', layer: 3 },
+  { name: 'Ethernet (802.3)', category: 'Protocolo / Trama', layer: 2 },
+  { name: 'Wi-Fi MAC (802.11)', category: 'Protocolo', layer: 2 },
+  { name: 'ARP', category: 'Protocolo', layer: 2 },
+  { name: 'Conector RJ-45', category: 'Componente Físico', layer: 1 }
+];
+
+let arcadeTimer = 30;
+let arcadeInterval = null;
+let arcadeCurrentItem = null;
+let arcadeHits = 0;
+let arcadeTotal = 0;
+let arcadePlaying = false;
+
+function renderSpeedMode(container) {
+  if (!arcadePlaying) {
+    container.innerHTML = `
+      <div class="game-panel" style="text-align:center;padding:1.5rem 0;">
+        <div style="font-size:3.5rem;margin-bottom:.5rem;">⚡</div>
+        <div class="game-title" style="color:var(--unicor-gold);font-size:1.8rem;">Desafío Contrarreloj: Caza-Protocolos</div>
+        <p class="game-subtitle">Tienes 30 segundos para clasificar la mayor cantidad de protocolos y dispositivos en su capa OSI correcta.</p>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.2rem;max-width:500px;margin:1.2rem auto;text-align:left;font-size:.9rem;">
+          <strong style="color:var(--unicor-gold);display:block;margin-bottom:.4rem;">Reglas de la ronda:</strong>
+          <ul style="padding-left:1.2rem;line-height:1.7;">
+            <li>+100 puntos por acierto y bonificación por racha activa</li>
+            <li>+1 segundo adicional por respuesta correcta</li>
+            <li>-2 segundos de penalización si te equivocas</li>
+          </ul>
+        </div>
+        <button class="btn-p" onclick="startArcadeGame()" style="padding:.7rem 2rem;font-size:1.1rem;margin-top:1rem;">
+          ▶ Iniciar Desafío (30s)
+        </button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="game-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+        <span style="font-size:.85rem;color:var(--muted);font-weight:700;">Tiempo restante:</span>
+        <span style="font-size:1.3rem;font-weight:900;color:${arcadeTimer <= 10 ? '#e74c3c' : 'var(--unicor-gold)'};">
+          ⏱️ ${arcadeTimer}s
+        </span>
+      </div>
+      <div class="arcade-timer-bar">
+        <div class="arcade-timer-fill" style="width:${(arcadeTimer / 30) * 100}%;"></div>
+      </div>
+
+      <div class="arcade-prompt-card">
+        <div class="arcade-item-category">${arcadeCurrentItem.category}</div>
+        <div class="arcade-item-name">${arcadeCurrentItem.name}</div>
+        <div style="font-size:.88rem;color:var(--muted);">¿A qué capa del Modelo OSI pertenece?</div>
+      </div>
+
+      <div class="arcade-layers-grid">
+        ${LAYERS.map(l => `
+          <button class="arcade-layer-btn" style="border-color:${l.color};background:${l.color}18;" onclick="answerArcade(${l.num})">
+            <span style="color:${l.color};font-size:.78rem;">CAPA ${l.num}</span>
+            <span style="font-size:.85rem;">${l.name}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function startArcadeGame() {
+  arcadeTimer = 30;
+  arcadeHits = 0;
+  arcadeTotal = 0;
+  arcadePlaying = true;
+  pickArcadeItem();
+  renderSpeedMode(document.getElementById('gameBody'));
+
+  if (arcadeInterval) clearInterval(arcadeInterval);
+  arcadeInterval = setInterval(() => {
+    arcadeTimer--;
+    if (arcadeTimer <= 0) {
+      endArcadeGame();
+    } else {
+      renderSpeedMode(document.getElementById('gameBody'));
+    }
+  }, 1000);
+}
+
+function pickArcadeItem() {
+  const rand = Math.floor(Math.random() * ARCADE_POOL.length);
+  arcadeCurrentItem = ARCADE_POOL[rand];
+}
+
+function answerArcade(layerNum) {
+  if (!arcadePlaying) return;
+  arcadeTotal++;
+  const isOk = (layerNum === arcadeCurrentItem.layer);
+
+  if (isOk) {
+    playSound('correct');
+    arcadeHits++;
+    arcadeTimer = Math.min(30, arcadeTimer + 1);
+    updateGameStats(100);
+  } else {
+    playSound('incorrect');
+    arcadeTimer = Math.max(0, arcadeTimer - 2);
+    updateGameStats(0, true);
+  }
+
+  if (arcadeTimer <= 0) {
+    endArcadeGame();
+  } else {
+    pickArcadeItem();
+    renderSpeedMode(document.getElementById('gameBody'));
+  }
+}
+
+function endArcadeGame() {
+  clearInterval(arcadeInterval);
+  arcadePlaying = false;
+  playSound('fanfare');
+  const container = document.getElementById('gameBody');
+  const accuracy = arcadeTotal > 0 ? Math.round((arcadeHits / arcadeTotal) * 100) : 0;
+  const medal = accuracy >= 80 ? '🥇 Oro' : accuracy >= 60 ? '🥈 Plata' : '🥉 Bronce';
+
+  container.innerHTML = `
+    <div class="game-panel" style="text-align:center;padding:1.5rem 0;">
+      <div style="font-size:3.5rem;margin-bottom:.5rem;">🏁</div>
+      <div class="game-title" style="color:var(--unicor-gold);font-size:1.8rem;">¡Tiempo Terminado!</div>
+      <p class="game-subtitle">Gran demostración de velocidad de respuesta técnica.</p>
+
+      <div style="display:flex;justify-content:center;gap:1.5rem;margin:1.4rem auto;flex-wrap:wrap;">
+        <div class="game-stat-item" style="padding:.6rem 1.4rem;">
+          <span class="stat-label">Aciertos</span>
+          <span class="stat-val highlight">${arcadeHits} / ${arcadeTotal}</span>
+        </div>
+        <div class="game-stat-item" style="padding:.6rem 1.4rem;">
+          <span class="stat-label">Precisión</span>
+          <span class="stat-val">${accuracy}%</span>
+        </div>
+        <div class="game-stat-item" style="padding:.6rem 1.4rem;">
+          <span class="stat-label">Distinción</span>
+          <span class="stat-val highlight">${medal}</span>
+        </div>
+      </div>
+
+      <button class="btn-p" onclick="startArcadeGame()" style="padding:.7rem 2rem;font-size:1rem;margin-top:.8rem;">
+        ⚡ Intentar de nuevo
+      </button>
+    </div>`;
+}
+
+// ============================================================
+// AUTOEVALUACIÓN (QUIZ)
+// ============================================================
+const QS = [
+  { q:'¿En qué capa del modelo OSI opera el protocolo HTTP/HTTPS?', opts:['Capa 4 — Transporte','Capa 7 — Aplicación','Capa 3 — Red','Capa 6 — Presentación'], c:1, exp:'HTTP opera en la Capa 7 (Aplicación): es la interfaz directa para clientes web como navegadores.' },
+  { q:'¿Qué dispositivo opera principalmente en la Capa 2 del modelo OSI?', opts:['Router','Hub','Switch','Repetidor'], c:2, exp:'El Switch opera en Capa 2 (Enlace de Datos) y conmuta tramas basándose en direcciones MAC físicas.' },
+  { q:'¿Cuál es la PDU (Protocol Data Unit) de la Capa 3 — Red?', opts:['Trama (Frame)','Segmento','Paquete','Bit'], c:2, exp:'En la Capa 3 (Red), la unidad de datos se denomina "Paquete" y contiene las IPs de origen y destino.' },
+  { q:'¿Qué protocolo de Transporte garantiza la entrega ordenada y confiable mediante confirmaciones?', opts:['UDP','ICMP','TCP','ARP'], c:2, exp:'TCP (Capa 4) garantiza entrega ordenada y sin pérdidas mediante números de secuencia y acuses de recibo (ACK).' },
+  { q:'¿Cuántas capas componen formalmente el modelo de referencia OSI?', opts:['4','5','6','7'], c:3, exp:'El modelo OSI está compuesto exactamente por 7 capas: Física, Enlace de Datos, Red, Transporte, Sesión, Presentación y Aplicación.' },
+  { q:'¿Qué capa es responsable del cifrado, compresión y traducción de formatos de datos?', opts:['Capa 5 — Sesión','Capa 7 — Aplicación','Capa 6 — Presentación','Capa 4 — Transporte'], c:2, exp:'La Capa 6 (Presentación) maneja el cifrado/descifrado (SSL/TLS), compresión de medios y codificación (ej. UTF-8).' },
+  { q:'Un router toma decisiones de enrutamiento basándose en...', opts:['Direcciones MAC','Puertos TCP/UDP','Direcciones IP','Nombres de dominio DNS'], c:2, exp:'Los routers operan en la Capa 3 (Red) e inspeccionan las direcciones IP de los paquetes para calcular la mejor ruta.' },
+  { q:'¿Qué protocolo de Capa 7 se utiliza comúnmente para transferencia de archivos?', opts:['TCP','FTP','ARP','OSPF'], c:1, exp:'FTP (File Transfer Protocol) opera en Capa 7 y es un servicio diseñado para la gestión y descarga de archivos.' },
+  { q:'La encapsulación de datos ocurre cuando el mensaje...', opts:['Sube por las capas OSI en el receptor','Baja por las capas OSI en el emisor','Viaja por el medio físico','Llega a la capa de Sesión'], c:1, exp:'La encapsulación ocurre en el EMISOR cuando el mensaje desciende por la pila: cada capa agrega su propia cabecera.' },
+  { q:'¿Cuál mnemotecnia en inglés ayuda a recordar las capas en orden descendente (7 a 1)?', opts:['"Please Do Not Throw Sausage Pizza Away"','"All People Seem To Need Data Processing"','"Some People Fear Networks And Data Loss"','"Application Protocol Suite Transport Network Data Link"'], c:1, exp:'"All People Seem To Need Data Processing" corresponde a: Application, Presentation, Session, Transport, Network, Data-link, Physical.' }
+];
+
+let qIdx=0, qScore=0, qAnswered=false, qDone=false;
+
+function renderQuiz() {
+  const c=document.getElementById('quizContainer');
+  if(qDone){
+    const pct=Math.round((qScore/QS.length)*100), medal=pct>=90?'🏆':pct>=70?'🥈':pct>=50?'🥉':'📚';
+    c.innerHTML=`
+      <div style="text-align:center;padding:2.2rem 1rem;">
+        <div style="font-size:4rem;">${medal}</div>
+        <div style="font-size:2rem;font-weight:900;margin:.5rem 0;color:var(--unicor-gold);">${qScore}/${QS.length} correctas</div>
+        <div style="font-size:1.15rem;color:var(--muted);">${pct}% de acierto</div>
+        <p style="color:#d5e8dc;font-size:.95rem;margin:1.2rem auto;max-width:550px;">
+          ${pct>=90?'¡Excelente desempeño! Demuestras un dominio sólido de la arquitectura OSI para tu formación en Informática.':
+            pct>=70?'¡Muy buen resultado! Has asimilado los principios clave de las capas OSI.':
+            pct>=50?'Buen intento. Te sugerimos revisar las capas donde tuviste dudas y repetir la autoevaluación.':
+            'Te recomendamos repasar las secciones de capas en detalle y volver a intentarlo.'}
+        </p>
+        <button class="btn-p" onclick="restartQuiz()" style="padding:.55rem 1.6rem;">🔄 Intentar de nuevo</button>
+      </div>`;
+    return;
+  }
+  const q=QS[qIdx], pct=(qIdx/QS.length)*100;
+  c.innerHTML=`
+    <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-q"><span class="qn">${qIdx+1}</span>${q.q}</div>
+    <div class="quiz-opts" id="qopts">${q.opts.map((o,i)=>`<div class="quiz-opt" onclick="answerQ(${i})">${o}</div>`).join('')}</div>
+    <div class="quiz-fb" id="qfb"></div>
+    <div class="quiz-nav">
+      <span class="quiz-prog">Pregunta ${qIdx+1} de ${QS.length} · Puntaje actual: ${qScore}</span>
+      <button class="btn-s" id="qnxt" style="display:none" onclick="nextQ()">Siguiente →</button>
+    </div>`;
+}
+
+function answerQ(idx) {
+  if(qAnswered)return; qAnswered=true;
+  const q=QS[qIdx];
+  document.querySelectorAll('.quiz-opt').forEach((o,i)=>{
+    o.style.pointerEvents='none';
+    if(i===q.c)o.classList.add('correct');
+    else if(i===idx&&i!==q.c)o.classList.add('incorrect');
+  });
+  const ok=idx===q.c; if(ok)qScore++;
+  const fb=document.getElementById('qfb'); fb.className='quiz-fb show '+(ok?'ok':'fail');
+  fb.innerHTML=`${ok?'✅ ¡Correcto!':'❌ Incorrecto.'} ${q.exp}`;
+  document.getElementById('qnxt').style.display='block';
+}
+
+function nextQ(){ qAnswered=false; qIdx++; if(qIdx>=QS.length)qDone=true; renderQuiz(); }
+function restartQuiz(){ qIdx=0; qScore=0; qAnswered=false; qDone=false; renderQuiz(); }
+
+// ============================================================
+// BARRA LATERAL RETRÁCTIL (SIDEBAR) & SCROLLSPY
+// ============================================================
+function setupSidebar() {
+  const toggleBtn = document.getElementById('sidebarToggle');
+  const closeBtn  = document.getElementById('sidebarClose');
+  const sidebar   = document.getElementById('sidebarNav');
+  const backdrop  = document.getElementById('sidebarBackdrop');
+  const links     = document.querySelectorAll('.sidebar-link');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    backdrop.classList.add('active');
+    toggleBtn.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('active');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    if (sidebar.classList.contains('open')) closeSidebar();
+    else openSidebar();
+  });
+
+  closeBtn.addEventListener('click', closeSidebar);
+  backdrop.addEventListener('click', closeSidebar);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+      closeSidebar();
+      toggleBtn.focus();
+    }
+  });
+
+  links.forEach(link => {
+    link.addEventListener('click', () => {
+      closeSidebar();
+    });
+  });
+
+  // Scrollspy: Resaltar la sección activa en la barra lateral
+  const secs = document.querySelectorAll('section[id]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => {
+          const match = a.getAttribute('href') === '#' + e.target.id;
+          a.classList.toggle('active', match);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  secs.forEach(s => obs.observe(s));
+}
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderStack();
+  renderLayerTabs();
+
+  // Flujo de datos
+  renderFlowDiagram();
+
+  // Inicializar Minijuego Educativo
+  selectGameMode('encapsulation');
+
+  // Quiz
+  renderQuiz();
+
+  // Barra lateral retráctil
+  setupSidebar();
+
+  // Controles de flujo
+  document.getElementById('flowPlay').addEventListener('click', () => {
+    if(flowIv){
+      clearInterval(flowIv); flowIv=null;
+      document.getElementById('flowPlay').textContent='▶ Continuar';
+    } else {
+      document.getElementById('flowPlay').textContent='⏸ Pausar';
+      flowIv=setInterval(animateFlow, 900);
+    }
+  });
+  document.getElementById('flowReset').addEventListener('click', resetFlow);
+});
+</script>
+</body>
+</html>
