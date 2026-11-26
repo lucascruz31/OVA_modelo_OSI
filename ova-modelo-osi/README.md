@@ -54,6 +54,7 @@ No requiere instalación de servidores, frameworks ni librerías adicionales:
 ---
 
 ## 👨‍💻 Autoría y Créditos
+* **Lucas Cruz, Jerónimo Torrente, Yoimer Coronado**
 * **Licenciatura en Informática**
 * **Facultad de Educación y Ciencias Humanas**
 * **Universidad de Córdoba** · Montería, Colombia.
